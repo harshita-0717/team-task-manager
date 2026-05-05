@@ -24,14 +24,16 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", form);
 
-      // save token
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.user.role);
+      localStorage.setItem("userId", res.data.user.id);
+      localStorage.setItem("name", res.data.user.name);
 
       alert("Login successful!");
       navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
-    }
+    } 
   };
 
   return (

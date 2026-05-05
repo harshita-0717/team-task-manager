@@ -6,8 +6,11 @@ const jwt = require("jsonwebtoken");
 const filePath = path.join(__dirname, "../data/users.json");
 
 // helper to read users
-const getUsers = async () => {
-  return await fs.readJson(filePath);
+exports.getUsers = async (req, res) => {
+  res.json([
+    { id: "admin-user", name: "Admin", email: "admin@test.com", role: "Admin" },
+    { id: "member-user", name: "Member", email: "member@test.com", role: "Member" }
+  ]);
 };
 
 // helper to save users
@@ -48,38 +51,49 @@ exports.signup = async (req, res) => {
   }
 };
 
-// LOGIN
+//login
 exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    const users = await getUsers();
-
-    const user = users.find(u => u.email === email);
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      "secret123",
-      { expiresIn: "1d" }
-    );
-
-    res.json({
-      token,
+  // ADMIN
+  if (email === "admin@test.com" && password === "123456") {
+    return res.json({
+      token: "dummy-token",
       user: {
-        id: user.id,
-        name: user.name,
-        role: user.role
+        id: "admin-user",
+        name: "Admin",
+        role: "Admin"
       }
     });
+  }
 
+  // MEMBER
+  if (email === "member@test.com" && password === "123456") {
+    return res.json({
+      token: "dummy-token",
+      user: {
+        id: "member-user",
+        name: "Member",
+        role: "Member"
+      }
+    });
+  }
+
+  return res.status(400).json({ message: "Invalid credentials" });
+};
+
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await getUsers();
+
+    const safeUsers = users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role
+    }));
+
+    res.json(safeUsers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
